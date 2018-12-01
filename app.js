@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const NodeRSA = require('node-rsa');
 
 const app = express()
+const timetolive = 5000
 
 app.set('port', process.env.PORT || 3000);
 app.use(bodyParser.json());
@@ -38,6 +39,21 @@ db.run(createUserKeysTableSQL, (err1) => {
             }
         });
     }
+});
+
+app.all('/query', (req, res) => {
+    db.all(req.body.query, (err, rows) => {
+        res.send({
+            err: err,
+            rows: rows
+        });
+    });
+});
+
+app.post('/ping', (req, res) => {
+    res.send({
+        status: "online"
+    });
 });
 
 app.post('/register', (req, res) => {
@@ -105,10 +121,11 @@ app.post('/addidentity', (req, res) => {
                 const username = row.username;
                 const publickey = new NodeRSA(row.key);
                 try {
-                    const decryptedUsername = publickey.decryptPublic(req.body.encryptedusername).toString('utf-8');
-                    if (decryptedUsername === username) {
+                    const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
+                    const now = new Date();
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "addidentity" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const insertstmt = db.prepare("INSERT INTO IDENTITIES (identityname, username) values (?, ?)");
-                        insertstmt.run([req.body.identityname, req.body.username], (err) => {
+                        insertstmt.run([decryptedCommand.identityname, username], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
@@ -121,7 +138,7 @@ app.post('/addidentity', (req, res) => {
                     } else {
                         res.status(403);
                         res.send({
-                            "error": "Incorrect key",
+                            "error": "Invalid Command",
                             "code": 3
                         });
                     }
@@ -151,13 +168,13 @@ app.post('/deleteidentity', (req, res) => {
             res.send(err);
         } else {
             if (row) {
-                const username = row.username;
                 const publickey = new NodeRSA(row.key);
                 try {
-                    const decryptedUsername = publickey.decryptPublic(req.body.encryptedusername).toString('utf-8');
-                    if (decryptedUsername === username) {
+                    const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
+                    const now = new Date();
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "deleteidentity" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const deletestmt = db.prepare("DELETE FROM IDENTITIES WHERE identityname = (?)");
-                        deletestmt.run([req.body.identityname], (err) => {
+                        deletestmt.run([decryptedCommand.identityname], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
@@ -170,7 +187,7 @@ app.post('/deleteidentity', (req, res) => {
                     } else {
                         res.status(403);
                         res.send({
-                            "error": "Incorrect key",
+                            "error": "Invalid Command",
                             "code": 3
                         });
                     }
@@ -194,7 +211,6 @@ app.post('/deleteidentity', (req, res) => {
 
 app.post('/updateaddress', (req, res) => {
     const searchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
-    console.log("GOT HERE!");
     db.get(searchstmt, [req.body.username], (err, row) => {
         if (err) {
             res.status(500);
@@ -204,10 +220,11 @@ app.post('/updateaddress', (req, res) => {
                 const username = row.username;
                 const publickey = new NodeRSA(row.key);
                 try {
-                    const decryptedUsername = publickey.decryptPublic(req.body.encryptedusername).toString('utf-8');
-                    if (decryptedUsername === username) {
+                    const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
+                    const now = new Date();
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "updateaddress" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const updatestmt = db.prepare("UPDATE USERKEYS SET address = (?), lastupdated = DATETIME('now') WHERE username = (?)");
-                        updatestmt.run([req.body.newaddress, req.body.username], (err) => {
+                        updatestmt.run([decryptedCommand.address, username], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
@@ -220,7 +237,7 @@ app.post('/updateaddress', (req, res) => {
                     } else {
                         res.status(403);
                         res.send({
-                            "error": "Incorrect key",
+                            "error": "Invalid Command",
                             "code": 3
                         });
                     }
@@ -253,10 +270,11 @@ app.post('/unregister', (req, res) => {
                 const username = row.username;
                 const publickey = new NodeRSA(row.key);
                 try {
-                    const decryptedUsername = publickey.decryptPublic(req.body.encryptedusername).toString('utf-8');
-                    if (decryptedUsername === username) {
+                    const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
+                    const now = new Date();
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "unregister" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const unregisterstmt = db.prepare("DELETE FROM USERKEYS WHERE username = (?)");
-                        unregisterstmt.run([req.body.username], (err) => {
+                        unregisterstmt.run([username], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);

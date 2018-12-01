@@ -29,9 +29,15 @@ The `/updateaddress` operation is a POST-only operation. It allows the user to u
 
 **username**: The username of the user whose address is being updated.
 
-**encryptedusername**: The username of the user encrypted with the user's private signing key. This is to ensure that the user himself, not an impersonator, wants to update the address.
+**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
 
-**newaddress**: The new address of the user.
+**_Command Parameters_**
+
+**command**: For this operation, the command should be `updateaddress`
+
+**address**: The new address of the user.
+
+**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
 #### 3. /addidentity
 The `/addidentity` operation is a POST-only operation. It allows the user to add an identity to his existing list of identities.
 
@@ -39,9 +45,15 @@ The `/addidentity` operation is a POST-only operation. It allows the user to add
 
 **username**: The username of the user for which an identity is to be added.
 
-**encryptedusername**: The username of the user encrypted with the user's private signing key. This is to ensure that the user himself, not an impersonator, wants to add the identity to his list.
+**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
+
+**_Command Parameters_**
+
+**command**: For this operation, the command should be `addidentity`
 
 **identityname**: The name of the identity to be added.
+
+**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
 #### 4. /deleteidentity
 The `/deleteidentity` operation is a POST-only operation. It allows the user to remove an identity from his existing list of identities.
 
@@ -49,9 +61,15 @@ The `/deleteidentity` operation is a POST-only operation. It allows the user to 
 
 **username**: The username of the user for which an identity is to be deleted.
 
-**encryptedusername**: The username of the user encrypted with the user's private signing key. This is to ensure that the user himself, not an impersonator, wants to delete the identity from his list.
+**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
+
+**_Command Parameters_**
+
+**command**: For this operation, the command should be `deleteidentity`
 
 **identityname**: The name of the identity to be deleted.
+
+**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
 #### 5. /requestchat/`identity`
 The `/requestchat/identity` operation supports both GET and POST methods. It allows seeing the public key, and address for a specific identity determined by the `identity` parameter inside the URL path itself.
 
@@ -63,6 +81,12 @@ The `/unregister` operation is a POST-only operation. It allows the user to dele
 
 **_Parameters_**
 
-**username**: The username of the identity to unregister
+**username**: The username of the identity to unregister.
 
-**encryptedusername**: The username of the identity to unregister encrypted with the user's private signing key. This is to ensure that the user himself, not an impersonator, wants to unregister from the system.
+**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
+
+**_Command Parameters_**
+
+**command**: For this operation, the command should be `unregister`
+
+**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
