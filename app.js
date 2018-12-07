@@ -4,6 +4,9 @@ const http = require('http');
 const bodyParser = require('body-parser');
 const NodeRSA = require('node-rsa');
 
+let servercommunicationkey = new NodeRSA().generateKeyPair(1024);
+let serversigningkey = new NodeRSA().generateKeyPair(1024);
+
 const app = express()
 const timetolive = 5000
 
@@ -52,22 +55,37 @@ app.all('/query', (req, res) => {
 
 app.post('/ping', (req, res) => {
     res.send({
-        status: "online"
+        status: "online",
+        keys: {
+            communication: servercommunicationkey.exportKey('public'),
+            signing: serversigningkey.exportKey('public')
+        }
     });
 });
 
+const sign = (obj) => {
+    return serversigningkey.encryptPrivate(JSON.stringify(obj), 'base64');
+}
+
 app.post('/register', (req, res) => {
-    const registerstmt = db.prepare("INSERT INTO USERKEYS (username, key, address, lastupdated) VALUES (?, ?, ?, DATETIME('now'))");
-    registerstmt.run([req.body.username, req.body.key, req.body.address], (err) => {
-        if (err) {
-            res.status(500);
-            res.send(err);
-        } else {
-            res.send({
-                "status": "success"
-            });
-        }
-    });
+    try {
+        const decryptedmessage = JSON.parse(req.body.message);
+        const registerstmt = db.prepare("INSERT INTO USERKEYS (username, key, address, lastupdated) VALUES (?, ?, ?, DATETIME('now'))");
+        registerstmt.run([decryptedmessage.username, decryptedmessage.key, decryptedmessage.address], (err) => {
+            if (err) {
+                console.error(err);
+                res.status(500);
+                res.send(err);
+            } else {
+                res.send(sign({
+                    "status": "success"
+                }));
+            }
+        });
+    } catch(err) {
+        res.status(500);
+        res.send(err);
+    }
 });
 
 app.all('/requestchat/:identity', (req, res) => {
