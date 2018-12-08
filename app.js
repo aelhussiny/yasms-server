@@ -32,8 +32,7 @@ db.run(createUserKeysTableSQL, (err1) => {
         db.run(createIdentitiesTableSQL, (err2) => {
             if (err2) {
                 return console.error(err2.message);
-            }
-            else {
+            } else {
                 db.run("PRAGMA foreign_keys = ON;", (err3) => {
                     if (err3) {
                         return console.error(err3.message);
@@ -82,7 +81,7 @@ app.post('/register', (req, res) => {
                 }));
             }
         });
-    } catch(err) {
+    } catch (err) {
         res.status(500);
         res.send(err);
     }
@@ -103,11 +102,11 @@ app.all('/requestchat/:identity', (req, res) => {
                         res.send(err);
                     } else {
                         if (row2) {
-                            res.send({
+                            res.send(sign({
                                 "status": "success",
                                 "key": row2.key,
                                 "address": row2.address
-                            });
+                            }));
                         } else {
                             res.status(404);
                             res.send({
@@ -128,6 +127,60 @@ app.all('/requestchat/:identity', (req, res) => {
     });
 });
 
+app.post('/searchidentities', (req, res) => {
+    const usersearchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
+    db.get(usersearchstmt, [req.body.username], (err, row) => {
+        if (err) {
+            res.status(500);
+            res.send(err);
+        } else {
+            if (row) {
+                const username = row.username;
+                const publickey = new NodeRSA(row.key);
+                try {
+                    const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
+                    const now = new Date();
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "searchidentities" && decryptedCommand.timestamp >= now.getTime() - timetolive && decryptedCommand.timestamp < now.getTime()) {
+                        const searchstmt = "SELECT I.identityname FROM IDENTITIES I, USERKEYS U WHERE I.username = U.username AND I.username != (?) AND I.identityname LIKE ?";
+                        db.all(searchstmt, [username, '%' + decryptedCommand.query + '%'], (err, rows) => {
+                            if (err) {
+                                res.status(500);
+                                res.send({
+                                    "error": "Problem with finding identities",
+                                    "code": 4
+                                });
+                            } else {
+                                res.send(sign({
+                                    "status": "success",
+                                    "identities": rows
+                                }));
+                            }
+                        });
+                    } else {
+                        res.status(403);
+                        res.send({
+                            "error": "Invalid Command",
+                            "code": 3
+                        });
+                    }
+                } catch (error) {
+                    res.status(403);
+                    res.send({
+                        "error": "Incorrect key",
+                        "code": 2
+                    });
+                }
+            } else {
+                res.status(404);
+                res.send({
+                    "error": "Username not found",
+                    "code": 1
+                });
+            }
+        }
+    });
+});
+
 app.post('/addidentity', (req, res) => {
     const searchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
     db.get(searchstmt, [req.body.username], (err, row) => {
@@ -141,16 +194,16 @@ app.post('/addidentity', (req, res) => {
                 try {
                     const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
                     const now = new Date();
-                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "addidentity" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "addidentity" && decryptedCommand.timestamp >= now.getTime() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const insertstmt = db.prepare("INSERT INTO IDENTITIES (identityname, username) values (?, ?)");
                         insertstmt.run([decryptedCommand.identityname, username], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
                             } else {
-                                res.send({
+                                res.send(sign({
                                     "status": "success"
-                                });
+                                }));
                             }
                         });
                     } else {
@@ -190,16 +243,16 @@ app.post('/deleteidentity', (req, res) => {
                 try {
                     const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
                     const now = new Date();
-                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "deleteidentity" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "deleteidentity" && decryptedCommand.timestamp >= now.getTime() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const deletestmt = db.prepare("DELETE FROM IDENTITIES WHERE identityname = (?)");
                         deletestmt.run([decryptedCommand.identityname], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
                             } else {
-                                res.send({
+                                res.send(sign({
                                     "status": "success"
-                                });
+                                }));
                             }
                         });
                     } else {
@@ -240,16 +293,16 @@ app.post('/updateaddress', (req, res) => {
                 try {
                     const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
                     const now = new Date();
-                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "updateaddress" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "updateaddress" && decryptedCommand.timestamp >= now.getTime() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const updatestmt = db.prepare("UPDATE USERKEYS SET address = (?), lastupdated = DATETIME('now') WHERE username = (?)");
                         updatestmt.run([decryptedCommand.address, username], (err) => {
                             if (err) {
                                 res.status(500);
                                 res.send(err);
                             } else {
-                                res.send({
+                                res.send(sign({
                                     "status": "success"
-                                });
+                                }));
                             }
                         });
                     } else {
@@ -290,7 +343,7 @@ app.post('/unregister', (req, res) => {
                 try {
                     const decryptedCommand = JSON.parse(publickey.decryptPublic(req.body.command).toString('utf-8'));
                     const now = new Date();
-                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "unregister" && decryptedCommand.timestamp >= now.getDate() - timetolive && decryptedCommand.timestamp < now.getTime()) {
+                    if (decryptedCommand.command && decryptedCommand.timestamp && decryptedCommand.command === "unregister" && decryptedCommand.timestamp >= now.getTime() - timetolive && decryptedCommand.timestamp < now.getTime()) {
                         const unregisterstmt = db.prepare("DELETE FROM USERKEYS WHERE username = (?)");
                         unregisterstmt.run([username], (err) => {
                             if (err) {
