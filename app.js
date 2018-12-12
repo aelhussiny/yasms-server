@@ -10,11 +10,16 @@ let serversigningkey = new NodeRSA().generateKeyPair(1024);
 const app = express()
 const timetolive = 5000
 
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || process.argv[2] || 3000);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 const db = new sqlite3.Database('./db/yasms-server.db', (err) => {
     if (err) {
