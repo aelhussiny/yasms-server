@@ -56,7 +56,23 @@ The `/addidentity` operation is a POST-only operation. It allows the user to add
 **identityname**: The name of the identity to be added.
 
 **timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
-#### 5. /requestchat/`identity`
+#### 5. /searchidentities
+The `/searchidentities` operation is a POST-only operation. It allows the user to search for identities.
+
+**_Parameters_**
+
+**username**: The username of the user for which an identity is to be added.
+
+**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
+
+**_Command Parameters_**
+
+**command**: For this operation, the command should be `searchidentities`
+
+**query**: The part of identity name to be searched for.
+
+**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
+#### 6. /requestchat/`identity`
 The `/requestchat/identity` operation supports both GET and POST methods. It allows seeing the public key, and address for a specific identity determined by the `identity` parameter inside the URL path itself.
 
 **_Parameters_**
