@@ -12,7 +12,9 @@ The server will report to you what port it is running on. The default port is 30
 You'll need an app like [Postman](https://www.getpostman.com/) to make requests to the server.
 ### Available Operations
 YASMS Server currently supports 6 operations:
-#### 1. /register
+#### 1. /ping
+The `ping` operation is a POST-only operation. It responds with the server's status as online, and the server's communication and signing keys.
+#### 2. /register
 The `/register` operation is a POST-only operation. It allows a new user to be registered into the system.
 
 **_Parameters_**
@@ -22,7 +24,7 @@ The `/register` operation is a POST-only operation. It allows a new user to be r
 **key**: The PEM String of the RSA Public Key generated for the identity, which verifies messages as signed by the corresponding private key held by the user.
 
 ***address**: The address the user is reachable at.
-#### 2. /updateaddress
+#### 3. /updateaddress
 The `/updateaddress` operation is a POST-only operation. It allows the user to update the address at which he is reachable.
 
 **_Parameters_**
@@ -38,7 +40,7 @@ The `/updateaddress` operation is a POST-only operation. It allows the user to u
 **address**: The new address of the user.
 
 **timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
-#### 3. /addidentity
+#### 4. /addidentity
 The `/addidentity` operation is a POST-only operation. It allows the user to add an identity to his existing list of identities.
 
 **_Parameters_**
@@ -54,39 +56,9 @@ The `/addidentity` operation is a POST-only operation. It allows the user to add
 **identityname**: The name of the identity to be added.
 
 **timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
-#### 4. /deleteidentity
-The `/deleteidentity` operation is a POST-only operation. It allows the user to remove an identity from his existing list of identities.
-
-**_Parameters_**
-
-**username**: The username of the user for which an identity is to be deleted.
-
-**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
-
-**_Command Parameters_**
-
-**command**: For this operation, the command should be `deleteidentity`
-
-**identityname**: The name of the identity to be deleted.
-
-**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.
 #### 5. /requestchat/`identity`
 The `/requestchat/identity` operation supports both GET and POST methods. It allows seeing the public key, and address for a specific identity determined by the `identity` parameter inside the URL path itself.
 
 **_Parameters_**
 
 **identity**: The name of the identity for which a public key and address are being requested.
-#### 6. /unregister
-The `/unregister` operation is a POST-only operation. It allows the user to delete himself and all his identities from the system.
-
-**_Parameters_**
-
-**username**: The username of the identity to unregister.
-
-**command**: The command of the user. This is the string form of the JSON object represented by _Command Parameters_ below, encrypted with the user's signing key.
-
-**_Command Parameters_**
-
-**command**: For this operation, the command should be `unregister`
-
-**timestamp**: Epoch time at which command was issued. Command will only be processed if it is was issued in the past 5000 milliseconds.

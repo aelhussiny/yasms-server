@@ -48,6 +48,7 @@ db.run(createUserKeysTableSQL, (err1) => {
     }
 });
 
+/*
 app.all('/query', (req, res) => {
     db.all(req.body.query, (err, rows) => {
         res.send({
@@ -56,6 +57,7 @@ app.all('/query', (req, res) => {
         });
     });
 });
+*/
 
 app.post('/ping', (req, res) => {
     res.send({
@@ -236,6 +238,7 @@ app.post('/addidentity', (req, res) => {
     });
 });
 
+/*
 app.post('/deleteidentity', (req, res) => {
     const searchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
     db.get(searchstmt, [req.body.username], (err, row) => {
@@ -284,6 +287,7 @@ app.post('/deleteidentity', (req, res) => {
         }
     });
 });
+*/
 
 app.post('/updateaddress', (req, res) => {
     const searchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
@@ -335,6 +339,7 @@ app.post('/updateaddress', (req, res) => {
     });
 });
 
+/*
 app.post('/unregister', (req, res) => {
     const searchstmt = "SELECT * FROM USERKEYS WHERE username = (?)";
     db.get(searchstmt, [req.body.username], (err, row) => {
@@ -384,6 +389,7 @@ app.post('/unregister', (req, res) => {
         }
     });
 });
+*/
 
 const server = http.createServer(app);
 
